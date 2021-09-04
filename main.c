@@ -11,7 +11,7 @@ typedef struct {
 	const char* key_label;
 	char key;
 	char detect;
-	int speed = 10;
+	int speed;
 } RepeatData;
 
 #define MACRO_COUNT 2
