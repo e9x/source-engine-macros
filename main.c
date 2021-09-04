@@ -17,7 +17,7 @@ typedef struct {
 RepeatData macros[MACRO_COUNT] = {
 	// { label, key label, send key, detect press }
 	{ "BHop", "[SPACE]", VK_SPACE, VK_SPACE},
-	{ "Use", "[E]", 'E', 'F'}
+	{ "Use", "[F]", 'E', 'F'}
 };
 
 HWND game;

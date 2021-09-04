@@ -12,6 +12,6 @@ More efficient than an AHK script
 
 ## Usage
 
-- Press `[E]` to repeatedly press use
+- Press `[F]` to repeatedly press use
 - Press `[SPACE]` to repeatedly jump
 - Press `[ESC]` in the terminal to quit
