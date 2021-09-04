@@ -23,7 +23,7 @@ typedef struct {
 } EnumData;
 
 BOOL CALLBACK WINAPI enum_cb(HWND window, LPARAM param) {
-	EnumData* data = param;
+	EnumData* data = (EnumData*)param;
 
 	DWORD pid = 0;
 
@@ -50,9 +50,9 @@ HWND find_process(const wchar_t* name) {
 	data.result = 0;
 	data.match = name;
 
-	EnumWindows(enum_cb, &data);
+	EnumWindows(enum_cb, (LPARAM)&data);
 
-	if (!data.result) printf("data.result == 0, last error: %d\n", GetLastError());
+	// if (!data.result) printf("data.result == 0, last error: %d\n", GetLastError());
 
 	return data.result;
 }

@@ -1,31 +1,49 @@
 #include <windows.h>
 #include <stdio.h>
+#include <conio.h>
 #include "./util.c"
 
-HWND hl2;
+const wchar_t* EXE = L"hl2.exe";
+
+typedef struct {
+	const char* label;
+	const char* key_label;
+	char key;
+	char detect;
+} RepeatData;
+
+#define MACRO_COUNT 2
+
+RepeatData macros[MACRO_COUNT] = {
+	// { label, key label, send key, detect press }
+	{ "BHop", "[SPACE]", VK_SPACE, VK_SPACE},
+	{ "Use", "[E]", 'E', 'F'}
+};
+
+HWND game;
 
 int quit = 0;
 
 DWORD WINAPI repeat_key(LPVOID param) {
-	int key = (int)param;
+	RepeatData* data = (RepeatData*)param;
 
-	short vkCode = LOBYTE(VkKeyScan(key));
+	short vk_code = LOBYTE(VkKeyScan(data->key));
 
-	ExKeyInfo lParam;
-	memset(&lParam, 0, sizeof(ExKeyInfo));
+	ExKeyInfo lparam;
+	memset(&lparam, 0, sizeof(ExKeyInfo));
 
-	lParam.scan = MapVirtualKey(vkCode, MAPVK_VK_TO_VSC);
+	lparam.scan = MapVirtualKey(vk_code, MAPVK_VK_TO_VSC);
 
 	while (!quit) {
-		if (GetAsyncKeyState(key) != 0) {
-			lParam.repeat = 0;
-			lParam.previous_state = 0;
-			lParam.transition_state = 0;
-			PostMessage(hl2, WM_KEYDOWN, vkCode, ExKeyInfo_uint(lParam));
-			lParam.repeat = 1;
-			lParam.previous_state = 1;
-			lParam.transition_state = 1;
-			PostMessage(hl2, WM_KEYUP, vkCode, ExKeyInfo_uint(lParam));
+		if (GetAsyncKeyState(data->detect) != 0) {
+			lparam.repeat = 0;
+			lparam.previous_state = 0;
+			lparam.transition_state = 0;
+			PostMessage(game, WM_KEYDOWN, vk_code, ExKeyInfo_uint(lparam));
+			lparam.repeat = 1;
+			lparam.previous_state = 1;
+			lparam.transition_state = 1;
+			PostMessage(game, WM_KEYUP, vk_code, ExKeyInfo_uint(lparam));
 			Sleep(10);
 		}
 
@@ -36,24 +54,29 @@ DWORD WINAPI repeat_key(LPVOID param) {
 }
 
 int main() {
-	printf("Waiting for hl2.exe ...\n");
-	while (!(hl2 = find_process(L"hl2.exe")));
-	printf("Found hl2.exe: %p\n", hl2);
+	printf("Waiting for %ls HWND...\n", EXE);
+	while (!(game = find_process(EXE)));
+	printf("Found %ls HWND: 0x%p\n", EXE, game);
 	
-	HANDLE jump_thread = CreateThread(0, 0, repeat_key, (LPVOID)VK_SPACE, NULL, NULL);
-	HANDLE use_thread = CreateThread(0, 0, repeat_key, (LPVOID)'E', NULL, NULL);
+	HANDLE threads[MACRO_COUNT];
+	
+	for (int index = 0; index < MACRO_COUNT; index++) {
+		RepeatData data = macros[index];
+		HANDLE thread = CreateThread(0, 0, repeat_key, (LPVOID)&macros[index], 0, 0);
 
-	if (jump_thread == 0 || use_thread == 0) {
-		printf("Jump thread: %p\nUse thread: %p", jump_thread, use_thread);
-		return EXIT_FAILURE;
+		if(!thread)printf("Thread creation for %s failed, last error: %d", data.label, GetLastError());
+		else printf("Press %s to repeatedly %s\n", data.key_label, data.label);
+		
+		threads[index] = thread;
 	}
 
-	printf("Press [E] to repeatedly press use\nPress [SPACE] to repeatedly jump\nPress [ESC] in this terminal to quit\n");
+	printf("Press [ESC] in this terminal to quit\n");
 
-	while (!(quit = getch() == VK_ESCAPE));
-	
-	WaitForSingleObject(jump_thread, 100);
-	WaitForSingleObject(use_thread, 100);
+	while (!(quit = _getch() == VK_ESCAPE));
+
+	for (int index = 0; index < MACRO_COUNT; index++) {
+		if (threads[index]) WaitForSingleObject(threads[index], 100);
+	}
 
 	return EXIT_SUCCESS;
 }
