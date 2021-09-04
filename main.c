@@ -4,20 +4,22 @@
 #include "./util.c"
 
 const wchar_t* EXE = L"hl2.exe";
+// VALORANT-Win64-Shipping.exe, portal2.exe, 
 
 typedef struct {
 	const char* label;
 	const char* key_label;
 	char key;
 	char detect;
+	int speed = 10;
 } RepeatData;
 
 #define MACRO_COUNT 2
 
 RepeatData macros[MACRO_COUNT] = {
-	// { label, key label, send key, detect press }
-	{ "BHop", "[SPACE]", VK_SPACE, VK_SPACE},
-	{ "Use", "[F]", 'E', 'F'}
+	// { label, key label, send key, detect press, speed }
+	{ "BHop", "[SPACE]", VK_SPACE, VK_SPACE, 10 },
+	{ "Use", "[F]", 'E', 'F', 10 }
 };
 
 HWND game;
@@ -44,7 +46,7 @@ DWORD WINAPI repeat_key(LPVOID param) {
 			lparam.previous_state = 1;
 			lparam.transition_state = 1;
 			PostMessage(game, WM_KEYUP, vk_code, ExKeyInfo_uint(lparam));
-			Sleep(10);
+			Sleep(data->speed);
 		}
 
 		Sleep(1);
