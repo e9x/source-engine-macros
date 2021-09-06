@@ -9,7 +9,7 @@ const wchar_t* EXE = L"hl2.exe";
 typedef struct {
 	const char* label;
 	const char* key_label;
-	WORD key;
+	char key;
 	char detect;
 	int speed;
 } RepeatData;
@@ -19,7 +19,7 @@ typedef struct {
 RepeatData macros[MACRO_COUNT] = {
 	// { label, key label, send key, detect press, speed }
 	{ "BHop", "[SPACE]", VK_SPACE, VK_SPACE, 10 },
-	{ "Use", "[F]", 'E', 'F', 10 }
+	{ "Use", "[F]", 'E', 'F', 20 }
 };
 
 HWND game;
