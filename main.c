@@ -9,7 +9,7 @@ const wchar_t* EXE = L"hl2.exe";
 typedef struct {
 	const char* label;
 	const char* key_label;
-	char key;
+	WORD key;
 	char detect;
 	int speed;
 } RepeatData;
@@ -57,7 +57,7 @@ DWORD WINAPI repeat_key(LPVOID param) {
 
 int main() {
 	printf("Waiting for %ls HWND...\n", EXE);
-	while (!(game = find_process(EXE)));
+	while (!(game = find_process(EXE))) Sleep(1);
 	printf("Found %ls HWND: 0x%p\n", EXE, game);
 	
 	HANDLE threads[MACRO_COUNT];
