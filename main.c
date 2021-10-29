@@ -1,7 +1,8 @@
-#include <windows.h>
+#define WIN32_LEAN_AND_MEAN
+#include "./util.h"
 #include <stdio.h>
 #include <conio.h>
-#include "./util.c"
+#include <stdlib.h>
 
 const wchar_t* EXE = L"hl2.exe";
 // VALORANT-Win64-Shipping.exe, portal2.exe, 
@@ -12,12 +13,9 @@ typedef struct {
 	char key;
 	char detect;
 	int speed;
-} RepeatData;
+} Macro;
 
-#define MACRO_COUNT 2
-
-RepeatData macros[MACRO_COUNT] = {
-	// { label, key label, send key, detect press, speed }
+Macro macros[] = {
 	{ "BHop", "[SPACE]", VK_SPACE, VK_SPACE, 20 },
 	{ "Use", "[F]", 'E', 'F', 20 }
 };
@@ -27,7 +25,7 @@ HWND game;
 int quit = 0;
 
 DWORD WINAPI repeat_key(LPVOID param) {
-	RepeatData* data = (RepeatData*)param;
+	Macro* data = (Macro*)param;
 
 	short vk_code = LOBYTE(VkKeyScan(data->key));
 
@@ -55,15 +53,23 @@ DWORD WINAPI repeat_key(LPVOID param) {
 	return EXIT_SUCCESS;
 }
 
-int main() {
+void wait_game() {
 	printf("Waiting for %ls HWND...\n", EXE);
 	while (!(game = find_process(EXE))) Sleep(1);
 	printf("Found %ls HWND: 0x%p\n", EXE, game);
+}
+
+int main() {
+	int macro_count = sizeof(macros) / sizeof(Macro);
+
+	wait_game();
 	
-	HANDLE threads[MACRO_COUNT];
-	
-	for (int index = 0; index < MACRO_COUNT; index++) {
-		RepeatData data = macros[index];
+	HANDLE* threads = malloc(macro_count * sizeof(HANDLE));
+
+	if (!threads) return EXIT_FAILURE;
+
+	for (int index = 0; index < macro_count; index++) {
+		Macro data = macros[index];
 		HANDLE thread = CreateThread(0, 0, repeat_key, (LPVOID)&macros[index], 0, 0);
 
 		if(!thread)printf("Thread creation for %s failed, last error: %d", data.label, GetLastError());
@@ -74,11 +80,16 @@ int main() {
 
 	printf("Press [ESC] in this terminal to quit\n");
 
-	while (!(quit = _getch() == VK_ESCAPE));
+	while (!(quit = _getch() == VK_ESCAPE)) if (!IsWindow(game)) {
+		game = NULL;
+		wait_game();
+	}
 
-	for (int index = 0; index < MACRO_COUNT; index++) {
+	for (int index = 0; index < macro_count; index++) {
 		if (threads[index]) WaitForSingleObject(threads[index], 100);
 	}
+
+	free(threads);
 
 	return EXIT_SUCCESS;
 }

@@ -1,11 +1,6 @@
-#include <Psapi.h>
-#include <string.h>
-
-typedef struct {
-	unsigned short repeat;
-	unsigned char scan;
-	int extended, previous_state, transition_state;
-} ExKeyInfo;
+#define WIN32_LEAN_AND_MEAN
+#include "./util.h"
+#include <psapi.h>
 
 unsigned int ExKeyInfo_uint(ExKeyInfo i) {
 	return i.repeat | (i.scan << 16) | (i.extended << 24) | (i.previous_state << 30) | (i.transition_state << 31);
@@ -51,8 +46,6 @@ HWND find_process(const wchar_t* name) {
 	data.match = name;
 
 	EnumWindows(enum_cb, (LPARAM)&data);
-
-	// if (!data.result) printf("data.result == 0, last error: %d\n", GetLastError());
 
 	return data.result;
 }
