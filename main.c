@@ -5,7 +5,10 @@
 #include <stdlib.h>
 
 const wchar_t* EXE = L"hl2.exe";
-// VALORANT-Win64-Shipping.exe, portal2.exe, 
+/*
+VALORANT-Win64-Shipping.exe
+portal2.exe
+*/
 
 typedef struct {
 	const char* label;
@@ -19,6 +22,10 @@ Macro macros[] = {
 	{ "BHop", "[SPACE]", VK_SPACE, VK_SPACE, 20 },
 	{ "Use", "[F]", 'E', 'F', 20 }
 };
+
+#define MACRO_COUNT (sizeof(macros) / sizeof(Macro))
+
+HANDLE threads[MACRO_COUNT * sizeof(HANDLE)];
 
 HWND game;
 
@@ -60,12 +67,7 @@ void wait_game() {
 	printf("Found %ls HWND: 0x%p\n", EXE, game);
 }
 
-#define MACRO_COUNT (sizeof(macros) / sizeof(Macro))
-
-HANDLE threads[MACRO_COUNT * sizeof(HANDLE)];
-
 int main() {
-	
 	wait_game();
 	
 	for (size_t index = 0; index < MACRO_COUNT; index++) {

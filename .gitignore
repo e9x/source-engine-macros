@@ -1,6 +1,6 @@
-Debug
-Release
-x64
-.vs
-*.filters
-*.user
+/Debug/
+/Release/
+/.vs/
+/*.filters
+/*.user
+/enc_temp_folder/
