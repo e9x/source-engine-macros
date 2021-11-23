@@ -24,8 +24,9 @@ HWND game;
 
 int quit = 0;
 
-DWORD WINAPI repeat_key(LPVOID index) {
-	Macro data = macros[(size_t)index];
+DWORD WINAPI repeat_key(LPVOID param) {
+	size_t index = (size_t)param;
+	Macro data = macros[index];
 
 	short vk_code = LOBYTE(VkKeyScan(data.key));
 
@@ -59,18 +60,19 @@ void wait_game() {
 	printf("Found %ls HWND: 0x%p\n", EXE, game);
 }
 
-int main() {
-	size_t macro_count = sizeof(macros) / sizeof(Macro);
+#define MACRO_COUNT (sizeof(macros) / sizeof(Macro))
 
+HANDLE threads[MACRO_COUNT * sizeof(HANDLE)];
+
+int main() {
+	
 	wait_game();
 	
-	HANDLE* threads = malloc(macro_count * sizeof(HANDLE));
+	for (size_t index = 0; index < MACRO_COUNT; index++) {
+		threads[index] = 0;
 
-	if (!threads) return EXIT_FAILURE;
-
-	for (int index = 0; index < macro_count; index++) {
 		Macro data = macros[index];
-		HANDLE thread = CreateThread(0, 0, repeat_key, index, 0, 0);
+		HANDLE thread = CreateThread(0, 0, repeat_key, (LPVOID)index, 0, 0);
 
 		if(!thread)printf("Thread creation for %s failed, last error: %d", data.label, GetLastError());
 		else printf("Press %s to repeatedly %s\n", data.key_label, data.label);
@@ -84,12 +86,6 @@ int main() {
 		game = NULL;
 		wait_game();
 	}
-
-	for (int index = 0; index < macro_count; index++) {
-		if (threads[index]) WaitForSingleObject(threads[index], 100);
-	}
-
-	free(threads);
 
 	return EXIT_SUCCESS;
 }
