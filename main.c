@@ -24,10 +24,10 @@ HWND game;
 
 int quit = 0;
 
-DWORD WINAPI repeat_key(LPVOID param) {
-	Macro* data = (Macro*)param;
+DWORD WINAPI repeat_key(LPVOID index) {
+	Macro data = macros[(size_t)index];
 
-	short vk_code = LOBYTE(VkKeyScan(data->key));
+	short vk_code = LOBYTE(VkKeyScan(data.key));
 
 	ExKeyInfo lparam;
 	memset(&lparam, 0, sizeof(ExKeyInfo));
@@ -35,7 +35,7 @@ DWORD WINAPI repeat_key(LPVOID param) {
 	lparam.scan = MapVirtualKey(vk_code, MAPVK_VK_TO_VSC);
 
 	while (!quit) {
-		if (GetAsyncKeyState(data->detect) != 0) {
+		if (GetAsyncKeyState(data.detect) != 0) {
 			lparam.repeat = 0;
 			lparam.previous_state = 0;
 			lparam.transition_state = 0;
@@ -44,7 +44,7 @@ DWORD WINAPI repeat_key(LPVOID param) {
 			lparam.previous_state = 1;
 			lparam.transition_state = 1;
 			PostMessage(game, WM_KEYUP, vk_code, ExKeyInfo_uint(lparam));
-			Sleep(data->speed);
+			Sleep(data.speed);
 		}
 
 		Sleep(1);
@@ -60,7 +60,7 @@ void wait_game() {
 }
 
 int main() {
-	int macro_count = sizeof(macros) / sizeof(Macro);
+	size_t macro_count = sizeof(macros) / sizeof(Macro);
 
 	wait_game();
 	
@@ -70,7 +70,7 @@ int main() {
 
 	for (int index = 0; index < macro_count; index++) {
 		Macro data = macros[index];
-		HANDLE thread = CreateThread(0, 0, repeat_key, (LPVOID)&macros[index], 0, 0);
+		HANDLE thread = CreateThread(0, 0, repeat_key, index, 0, 0);
 
 		if(!thread)printf("Thread creation for %s failed, last error: %d", data.label, GetLastError());
 		else printf("Press %s to repeatedly %s\n", data.key_label, data.label);
